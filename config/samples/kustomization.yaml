@@ -1,0 +1,5 @@
+## Append samples of your project ##
+resources:
+- hcc_v1alpha1_hccfleetupdate.yaml
+- hcc_v1alpha1_hccappconfiguration.yaml
+# +kubebuilder:scaffold:manifestskustomizesamples

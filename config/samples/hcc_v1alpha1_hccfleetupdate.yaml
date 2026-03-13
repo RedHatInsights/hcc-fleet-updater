@@ -1,0 +1,32 @@
+apiVersion: hcc.redhat.com/v1alpha1
+kind: HCCFleetUpdate
+metadata:
+  labels:
+    app.kubernetes.io/name: hcc-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: march-2026-cves
+spec:
+  description: "March 2026 monthly CVE image refresh"
+  strategy:
+    maxParallelism: 5
+    healthCheckTimeout: 10m
+    failurePolicy: Continue
+  apps:
+  - clowdAppName: host-inventory
+    namespace: hcc-inventory
+    images:
+    - image: quay.io/cloudservices/insights-host-inventory
+      tag: "a1b2c3d"
+    priority: 1
+  - clowdAppName: advisor-backend
+    namespace: hcc-advisor
+    images:
+    - image: quay.io/cloudservices/advisor-backend
+      tag: "e4f5g6h"
+    priority: 5
+  - clowdAppName: notifications-backend
+    namespace: hcc-notifications
+    images:
+    - image: quay.io/cloudservices/notifications-backend
+      tag: "i7j8k9l"
+    priority: 10

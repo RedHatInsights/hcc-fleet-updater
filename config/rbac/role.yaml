@@ -1,0 +1,68 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: manager-role
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - cloud.redhat.com
+  resources:
+  - clowdapps
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - hcc.redhat.com
+  resources:
+  - hccappconfigurations
+  - hccfleetupdates
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - hcc.redhat.com
+  resources:
+  - hccappconfigurations/finalizers
+  - hccfleetupdates/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - hcc.redhat.com
+  resources:
+  - hccappconfigurations/status
+  - hccfleetupdates/status
+  verbs:
+  - get
+  - patch
+  - update

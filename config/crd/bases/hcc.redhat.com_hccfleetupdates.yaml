@@ -1,0 +1,333 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.1
+  name: hccfleetupdates.hcc.redhat.com
+spec:
+  group: hcc.redhat.com
+  names:
+    kind: HCCFleetUpdate
+    listKind: HCCFleetUpdateList
+    plural: hccfleetupdates
+    singular: hccfleetupdate
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.summary.succeeded
+      name: Succeeded
+      type: integer
+    - jsonPath: .status.summary.failed
+      name: Failed
+      type: integer
+    - jsonPath: .status.summary.total
+      name: Total
+      type: integer
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          HCCFleetUpdate is the Schema for the hccfleetupdates API.
+          It orchestrates fleet-wide image rollouts across ClowdApp CRs.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: HCCFleetUpdateSpec defines the desired state of HCCFleetUpdate.
+            properties:
+              apps:
+                description: apps is the list of ClowdApps and their desired image
+                  updates.
+                items:
+                  description: AppImageSpec defines a ClowdApp and its desired image
+                    updates.
+                  properties:
+                    clowdAppName:
+                      description: clowdAppName is the metadata.name of the target
+                        ClowdApp CR.
+                      minLength: 1
+                      type: string
+                    images:
+                      description: images is the list of image:tag pairs to apply
+                        to this ClowdApp.
+                      items:
+                        description: ImageTagPair specifies a container image and
+                          its desired tag.
+                        properties:
+                          image:
+                            description: image is the full container image repository
+                              path (e.g. quay.io/cloudservices/advisor-backend).
+                            minLength: 1
+                            type: string
+                          tag:
+                            description: tag is the desired image tag (e.g. a1b2c3d).
+                            minLength: 1
+                            type: string
+                        required:
+                        - image
+                        - tag
+                        type: object
+                      minItems: 1
+                      type: array
+                    namespace:
+                      description: namespace is the namespace of the ClowdApp. Defaults
+                        to the operator namespace.
+                      type: string
+                    priority:
+                      default: 10
+                      description: priority controls wave ordering. Lower values are
+                        processed first.
+                      format: int32
+                      type: integer
+                  required:
+                  - clowdAppName
+                  - images
+                  type: object
+                minItems: 1
+                type: array
+              description:
+                description: description is a human-readable note about this update
+                  (e.g. "March 2026 CVE refresh").
+                type: string
+              paused:
+                description: paused halts the rollout without reverting any completed
+                  updates.
+                type: boolean
+              strategy:
+                description: strategy configures parallelism, timeouts, and failure
+                  handling.
+                properties:
+                  failurePolicy:
+                    default: Continue
+                    description: 'failurePolicy determines behavior when an app fails:
+                      Continue or Halt.'
+                    enum:
+                    - Continue
+                    - Halt
+                    type: string
+                  healthCheckTimeout:
+                    default: 10m
+                    description: healthCheckTimeout is how long to wait for an app
+                      to become healthy after patching.
+                    type: string
+                  maxParallelism:
+                    default: 5
+                    description: maxParallelism is the maximum number of apps updated
+                      concurrently.
+                    format: int32
+                    minimum: 1
+                    type: integer
+                type: object
+            required:
+            - apps
+            type: object
+          status:
+            description: HCCFleetUpdateStatus defines the observed state of HCCFleetUpdate.
+            properties:
+              appStatuses:
+                description: appStatuses tracks the per-app rollout status.
+                items:
+                  description: AppRolloutStatus tracks the rollout status of a single
+                    app.
+                  properties:
+                    clowdAppName:
+                      description: clowdAppName is the name of the ClowdApp.
+                      type: string
+                    lastTransitionTime:
+                      description: lastTransitionTime is when this app's phase last
+                        changed.
+                      format: date-time
+                      type: string
+                    message:
+                      description: message provides additional detail about the current
+                        phase.
+                      type: string
+                    namespace:
+                      description: namespace is the namespace of the ClowdApp.
+                      type: string
+                    phase:
+                      description: phase is the current rollout phase for this app.
+                      enum:
+                      - Pending
+                      - InProgress
+                      - Succeeded
+                      - Failed
+                      - Skipped
+                      type: string
+                    previousImages:
+                      description: previousImages records the image:tag values before
+                        this update, for rollback reference.
+                      items:
+                        description: ImageTagPair specifies a container image and
+                          its desired tag.
+                        properties:
+                          image:
+                            description: image is the full container image repository
+                              path (e.g. quay.io/cloudservices/advisor-backend).
+                            minLength: 1
+                            type: string
+                          tag:
+                            description: tag is the desired image tag (e.g. a1b2c3d).
+                            minLength: 1
+                            type: string
+                        required:
+                        - image
+                        - tag
+                        type: object
+                      type: array
+                  required:
+                  - clowdAppName
+                  - phase
+                  type: object
+                type: array
+              autoPaused:
+                description: |-
+                  autoPaused indicates the controller has halted processing due to a
+                  FailurePolicy of Halt. The rollout will remain paused until the user
+                  sets spec.paused=false or deletes the resource.
+                type: boolean
+              completionTime:
+                description: completionTime is when the fleet update finished (success
+                  or failure).
+                format: date-time
+                type: string
+              conditions:
+                description: conditions represent the current state of the HCCFleetUpdate.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+                x-kubernetes-list-map-keys:
+                - type
+                x-kubernetes-list-type: map
+              phase:
+                description: phase is the overall phase of the fleet update.
+                enum:
+                - Pending
+                - InProgress
+                - Completed
+                - PartiallyFailed
+                - Failed
+                - Paused
+                type: string
+              startTime:
+                description: startTime is when the fleet update began processing.
+                format: date-time
+                type: string
+              summary:
+                description: summary contains aggregate rollout counters.
+                properties:
+                  failed:
+                    description: failed is the number of apps that failed.
+                    format: int32
+                    type: integer
+                  inProgress:
+                    description: inProgress is the number of apps currently being
+                      updated.
+                    format: int32
+                    type: integer
+                  pending:
+                    description: pending is the number of apps not yet started.
+                    format: int32
+                    type: integer
+                  skipped:
+                    description: skipped is the number of apps that were skipped.
+                    format: int32
+                    type: integer
+                  succeeded:
+                    description: succeeded is the number of apps that completed successfully.
+                    format: int32
+                    type: integer
+                  total:
+                    description: total is the total number of apps in this fleet update.
+                    format: int32
+                    type: integer
+                required:
+                - failed
+                - inProgress
+                - pending
+                - skipped
+                - succeeded
+                - total
+                type: object
+            type: object
+        required:
+        - spec
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

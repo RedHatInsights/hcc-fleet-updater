@@ -1,0 +1,13 @@
+apiVersion: hcc.redhat.com/v1alpha1
+kind: HCCAppConfiguration
+metadata:
+  labels:
+    app.kubernetes.io/name: hcc-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: host-inventory
+spec:
+  clowdAppName: host-inventory
+  namespace: hcc-inventory
+  enabled: true
+  images:
+  - image: quay.io/cloudservices/insights-host-inventory
