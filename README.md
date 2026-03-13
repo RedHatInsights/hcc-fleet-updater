@@ -1,4 +1,4 @@
-# HCC Operator
+# HCC Operator (Work in Progress)
 
 A Kubernetes operator that automates fleet-wide container image rollouts across [ClowdApp](https://github.com/RedHatInsights/clowder) custom resources. It sits on top of Clowder and patches ClowdApp image references in coordinated, wave-based rollouts with health monitoring.
 
