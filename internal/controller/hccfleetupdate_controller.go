@@ -55,6 +55,7 @@ type HCCFleetUpdateReconciler struct {
 // +kubebuilder:rbac:groups="",resources=pods,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=events,verbs=create;patch
 
+//nolint:gocyclo // reconciliation loop is inherently complex
 func (r *HCCFleetUpdateReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := logf.FromContext(ctx)
 
@@ -411,7 +412,7 @@ func groupByWave(fu *hccv1alpha1.HCCFleetUpdate) [][]int {
 	})
 
 	var waves [][]int
-	var currentWave []int
+	var currentWave []int //nolint:prealloc // size not known ahead of time
 	var currentPriority int32 = -1
 
 	for _, e := range entries {

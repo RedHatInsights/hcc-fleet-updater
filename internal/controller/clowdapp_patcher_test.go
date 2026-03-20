@@ -183,7 +183,7 @@ func TestPatchClowdAppImages_InMemory(t *testing.T) {
 	}
 
 	var patchedCount int
-	var previousImages []hccv1alpha1.ImageTagPair
+	var previousImages []hccv1alpha1.ImageTagPair //nolint:prealloc // size not known ahead of time
 
 	// Simulate the patching logic (with deduplication, matching PatchClowdAppImages)
 	previousByRepo := make(map[string]string)

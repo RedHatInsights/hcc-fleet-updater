@@ -127,7 +127,7 @@ func PatchClowdAppImages(ctx context.Context, c client.Client, app *clowdapp.Clo
 
 // ReadClowdAppImages reads the current image:tag pairs from a ClowdApp's deployments and jobs.
 func ReadClowdAppImages(app *clowdapp.ClowdApp) []hccv1alpha1.ImageTagPair {
-	var images []hccv1alpha1.ImageTagPair
+	var images []hccv1alpha1.ImageTagPair //nolint:prealloc // size not known ahead of time
 	for _, d := range app.Spec.Deployments {
 		repo, tag := parseImageRef(d.PodSpec.Image)
 		images = append(images, hccv1alpha1.ImageTagPair{Image: repo, Tag: tag})
