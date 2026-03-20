@@ -134,8 +134,8 @@ func IsCertManagerCRDsInstalled() bool {
 }
 
 // LoadImageToKindClusterWithName loads a local container image to the kind cluster.
-// When using Podman, it saves to a tar archive first since "kind load docker-image"
-// does not work with rootless Podman.
+// It saves to a tar archive and uses "kind load image-archive" which works reliably
+// across Docker, Podman (rootless and rootful), and CI environments.
 func LoadImageToKindClusterWithName(name string) error {
 	cluster := defaultKindCluster
 	if v, ok := os.LookupEnv("KIND_CLUSTER"); ok {
@@ -146,20 +146,20 @@ func LoadImageToKindClusterWithName(name string) error {
 		kindBinary = v
 	}
 
-	// When using Podman, save to archive and load via image-archive
-	if os.Getenv("KIND_EXPERIMENTAL_PROVIDER") == "podman" {
-		archivePath := fmt.Sprintf("/tmp/kind-image-%s.tar", cluster)
-		saveCmd := exec.Command("podman", "save", name, "-o", archivePath)
-		if _, err := Run(saveCmd); err != nil {
-			return err
-		}
-		defer os.Remove(archivePath)
-		cmd := exec.Command(kindBinary, "load", "image-archive", archivePath, "--name", cluster)
-		_, err := Run(cmd)
-		return err
+	// Determine the container tool (match Makefile auto-detection)
+	containerTool := "docker"
+	if _, err := exec.LookPath("podman"); err == nil {
+		containerTool = "podman"
 	}
 
-	cmd := exec.Command(kindBinary, "load", "docker-image", name, "--name", cluster)
+	archivePath := fmt.Sprintf("/tmp/kind-image-%s.tar", cluster)
+	saveCmd := exec.Command(containerTool, "save", name, "-o", archivePath)
+	if _, err := Run(saveCmd); err != nil {
+		return err
+	}
+	defer func() { _ = os.Remove(archivePath) }()
+
+	cmd := exec.Command(kindBinary, "load", "image-archive", archivePath, "--name", cluster)
 	_, err := Run(cmd)
 	return err
 }
