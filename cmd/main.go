@@ -182,8 +182,9 @@ func main() {
 	}
 
 	if err := (&controller.HCCFleetUpdateReconciler{
-		Client:   mgr.GetClient(),
-		Scheme:   mgr.GetScheme(),
+		Client: mgr.GetClient(),
+		Scheme: mgr.GetScheme(),
+		//nolint:staticcheck // TODO: migrate to GetEventRecorder
 		Recorder: mgr.GetEventRecorderFor("hccfleetupdate-controller"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "HCCFleetUpdate")
