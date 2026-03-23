@@ -1,0 +1,34 @@
+{
+    "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+    "baseBranchPatterns": [
+        "main"
+    ],
+    "packageRules": [
+        {
+            "description": "Automerge Go module minor and patch updates",
+            "matchManagers": [
+                "gomod"
+            ],
+            "matchUpdateTypes": [
+                "minor",
+                "patch",
+                "digest"
+            ],
+            "automerge": true
+        },
+        {
+            "description": "Automerge Dockerfile base image updates",
+            "matchManagers": [
+                "dockerfile"
+            ],
+            "automerge": true
+        },
+        {
+            "description": "Automerge Tekton updates",
+            "matchManagers": [
+                "tekton"
+            ],
+            "automerge": true
+        }
+    ]
+}
